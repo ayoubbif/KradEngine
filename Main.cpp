@@ -14,7 +14,7 @@ const char* fragmentShaderSource = "#version 460 core\n"
 "out vec4 FragColor;\n"
 "void main()\n"
 "{\n"
-"   FragColor = vec4(0.6f, 0.6f, 0.7f, 1.0f);\n"
+"   FragColor = vec4(0.8f, 0.5f, 0.4f, 1.0f);\n"
 "}\0";
 
 int main()
@@ -35,13 +35,6 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-
-	// Vertices of the triangle
-	GLfloat vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
-	};
 
 	// Make the window's context current
 	glfwMakeContextCurrent(window);
@@ -74,13 +67,33 @@ int main()
 	// Delete the shaders as they are linked to the shader program
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
+	
+	// Vertices of the triangle
+	GLfloat vertices[] =
+	{
+		-0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // bottom left
+		 0.5f, -0.5f * float(sqrt(3)) / 3, 0.0f, // bottom right
+		 0.0f,  0.5f * float(sqrt(3)) * 2 / 3, 0.0f, // top
+		-0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, 
+		 0.5f / 2, 0.5f * float(sqrt(3)) / 6, 0.0f, 
+		 0.0f,  -0.5f * float(sqrt(3)) / 3, 0.0f,	
+	};
 
-	// Create a vertex array object and vertex buffer object
-	GLuint VAO, VBO;
+	GLuint indices[] =
+	{
+		0, 3, 5, // Lower left triangle
+		3, 2, 4, // Lower right triangle
+		5, 4, 1, // Upper triangle
+	};
 
-	// Generate the vertex array object and vertex buffer object
+
+	// Create a vertex array object and vertex buffer object 
+	GLuint VAO, VBO, EBO;
+
+	// Generate the vertex array object and vertex and element buffer object
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 	
 	// Bind the vertex array object and vertex buffer object
 	glBindVertexArray(VAO);
@@ -89,6 +102,10 @@ int main()
 	// Copy the vertices to the vertex buffer object
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	// Bind the element buffer object
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	// Set the vertex attributes
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -96,6 +113,7 @@ int main()
 	// Unbind the vertex array object and vertex buffer object
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	// Set the background color
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -118,7 +136,7 @@ int main()
 		glBindVertexArray(VAO);
 
 		// Draw the triangle
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawElements(GL_TRIANGLES, 9, GL_UNSIGNED_INT, 0);
 
 		// Swap the front and back buffers
 		glfwSwapBuffers(window);
@@ -130,6 +148,7 @@ int main()
 	// Delete the vertex array object, vertex buffer object, and shader program
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shaderProgram);
 
 	// Clean up
